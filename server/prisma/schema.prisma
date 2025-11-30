@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String?  @unique
+  username  String?
+  createdAt DateTime @default(now())
+  quizzes   Quiz[]
+}
+
+model Quiz {
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  createdBy   String?
+  user        User?      @relation(fields: [createdBy], references: [id])
+  questions   Question[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Question {
+  id        String   @id @default(uuid())
+  quizId    String
+  quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  question  String
+  timeLimit Int      @default(20)
+  order     Int
+  options   Option[]
+  createdAt DateTime @default(now())
+}
+
+model Option {
+  id         String   @id @default(uuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  text       String
+  isCorrect  Boolean  @default(false)
+  order      Int
+  createdAt  DateTime @default(now())
+
+  @@index([questionId])
+}
+
+model GameSession {
+  id              String            @id @default(uuid())
+  pin             String            @unique
+  quizId          String
+  hostToken       String            @unique
+  status          GameSessionStatus  @default(LOBBY) 
+  currentQuestion Int               @default(0)
+  createdAt       DateTime          @default(now())
+  endedAt         DateTime?
+  players         Player[]
+  answers         Answer[]
+}
+
+
+model Player {
+  id            String      @id @default(uuid())
+  gameSessionId String
+  gameSession   GameSession @relation(fields: [gameSessionId], references: [id], onDelete: Cascade)
+  nickname      String
+  playerToken   String      @unique
+  score         Int         @default(0)
+  joinedAt      DateTime    @default(now())
+  answers       Answer[]
+
+  @@index([gameSessionId])
+}
+
+model Answer {
+  id             String      @id @default(uuid())
+  gameSessionId  String
+  gameSession    GameSession @relation(fields: [gameSessionId], references: [id], onDelete: Cascade)
+  playerId       String
+  player         Player      @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  questionId     String
+  selectedOption Int 
+  isCorrect      Boolean
+  timeSpent      Int 
+  points         Int 
+  answeredAt     DateTime    @default(now())
+
+  @@index([gameSessionId])
+  @@index([playerId])
+}
+
+enum GameSessionStatus {
+  LOBBY
+  COUNTDOWN
+  QUESTION
+  RESULTS
+  LEADERBOARD
+  ENDED
+}

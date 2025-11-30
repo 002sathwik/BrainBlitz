@@ -53,3 +53,6 @@ coverage/
 tmp/
 temp/
 *.tmp
+/src/generated/prisma
+
+/generated/prisma
