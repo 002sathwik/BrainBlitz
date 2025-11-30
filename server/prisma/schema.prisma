@@ -1,6 +1,10 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -23,14 +27,15 @@ model Quiz {
 }
 
 model Question {
-  id        String   @id @default(uuid())
-  quizId    String
-  quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  question  String
-  timeLimit Int      @default(20)
-  order     Int
-  options   Option[]
-  createdAt DateTime @default(now())
+  id                 String   @id @default(uuid())
+  quizId             String
+  quiz               Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  question           String
+  timeLimit          Int      @default(20)
+  order              Int
+  correctAnswerIndex Int
+  options            Option[]
+  createdAt          DateTime @default(now())
 }
 
 model Option {
@@ -50,14 +55,13 @@ model GameSession {
   pin             String            @unique
   quizId          String
   hostToken       String            @unique
-  status          GameSessionStatus  @default(LOBBY) 
+  status          GameSessionStatus @default(LOBBY)
   currentQuestion Int               @default(0)
   createdAt       DateTime          @default(now())
   endedAt         DateTime?
   players         Player[]
   answers         Answer[]
 }
-
 
 model Player {
   id            String      @id @default(uuid())
@@ -79,10 +83,10 @@ model Answer {
   playerId       String
   player         Player      @relation(fields: [playerId], references: [id], onDelete: Cascade)
   questionId     String
-  selectedOption Int 
+  selectedOption Int
   isCorrect      Boolean
-  timeSpent      Int 
-  points         Int 
+  timeSpent      Int
+  points         Int
   answeredAt     DateTime    @default(now())
 
   @@index([gameSessionId])
