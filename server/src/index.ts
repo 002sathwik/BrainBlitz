@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import quizRoutes from './routes/quiz.route';
+import gameRoutes from './routes/games.route';
 const app = express();
 const PORT = 9000;
 
@@ -10,6 +11,7 @@ app.get('/', (req: Request, res: Response) => {
     res.send('Hello, World!');
 });
 app.use('/api/quiz', quizRoutes);
+app.use('/api/game', gameRoutes);
 
 app.get('/api/health', (req: Request, res: Response) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
