@@ -26,6 +26,7 @@ model Quiz {
   updatedAt   DateTime   @updatedAt
 }
 
+
 model Question {
   id                 String   @id @default(uuid())
   quizId             String

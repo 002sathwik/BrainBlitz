@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import quizRoutes from './routes/quiz.route';
 import gameRoutes from './routes/games.route';
+import rabbitmq from './config/rabbitmq';
 const app = express();
 const PORT = 9000;
 
@@ -21,6 +22,9 @@ app.use((req: Request, res: Response) => {
     res.status(404).send('Route not found');
 });
 
-app.listen(PORT, () => {
-    console.log(`🚀 Server running at http://localhost:${PORT}`);
-});
+
+rabbitmq.connect().then(() => {
+    app.listen(PORT, () => {
+        console.log(`🚀 Server running at http://localhost:${PORT}`);
+    });
+})

@@ -2,6 +2,7 @@ import redis from '../config/redis';
 import crypto from 'crypto';
 import { db } from '../utils/db';
 import { GameSessionStatus } from '@prisma/client';
+import rabbitmq from '../config/rabbitmq';
 
 export class GameService {
     private generatePin(): string {
@@ -13,7 +14,6 @@ export class GameService {
     }
 
 
-    // Create game session
     async createGame(quizId: string) {
         const quiz = await db.quiz.findUnique({
             where: { id: quizId },
@@ -24,7 +24,6 @@ export class GameService {
             throw new Error('Quiz not found');
         }
 
-        // Generate PIN (ensure unique)
         let pin = this.generatePin();
         let exists = await redis.exists(`game:${pin}`);
 
@@ -113,6 +112,21 @@ export class GameService {
             },
         });
 
+        await rabbitmq.publish(
+            'game_events',
+            `game.${pin}.player_joined`,
+            {
+                type: 'PLAYER_JOINED',
+                pin,
+                player: {
+                    playerId,
+                    nickname,
+                    joinedAt: player.joinedAt,
+                },
+                totalPlayers: game.players.length,
+            }
+        );
+
         return {
             playerId,
             playerToken,
@@ -121,7 +135,7 @@ export class GameService {
         };
     }
 
-    // Get game status
+
     async getGameStatus(pin: string) {
         const gameData = await redis.get(`game:${pin}`);
 
@@ -130,5 +144,53 @@ export class GameService {
         }
 
         return JSON.parse(gameData);
+    }
+
+
+    async startGame(pin: string, hostToken: string) {
+        const gameData = await redis.get(`game:${pin}`);
+
+        if (!gameData) {
+            throw new Error('Game not found');
+        }
+
+        const game = JSON.parse(gameData);
+
+        if (game.hostToken !== hostToken) {
+            throw new Error('Invalid host token');
+        }
+
+        if (game.status !== 'LOBBY') {
+            throw new Error('Game already started');
+        }
+
+        if (game.players.length === 0) {
+            throw new Error('No players in game');
+        }
+
+        game.status = 'COUNTDOWN';
+        await redis.setex(`game:${pin}`, 7200, JSON.stringify(game));
+
+        await db.gameSession.update({
+            where: { pin },
+            data: { status: 'COUNTDOWN' },
+        });
+
+        await rabbitmq.publish(
+            'game_events',
+            `game.${pin}.game_started`,
+            {
+                type: 'GAME_STARTED',
+                pin,
+                status: 'COUNTDOWN',
+                totalPlayers: game.players.length,
+            }
+        );
+
+        return {
+            message: 'Game started',
+            status: 'COUNTDOWN',
+            totalPlayers: game.players.length,
+        };
     }
 }

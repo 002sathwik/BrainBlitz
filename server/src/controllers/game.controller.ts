@@ -3,7 +3,11 @@ import { GameService } from '../service/game.service';
 
 const gameService = new GameService();
 
+
+
 export class GameController {
+
+
     async createGame(req: Request, res: Response) {
         try {
             const { quizId } = req.body;
@@ -26,6 +30,7 @@ export class GameController {
             });
         }
     }
+
 
     async joinGame(req: Request, res: Response) {
         try {
@@ -63,6 +68,30 @@ export class GameController {
             });
         } catch (error: any) {
             return res.status(404).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
+
+
+    async startGame(req: Request, res: Response) {
+        try {
+            const { pin } = req.params;
+            const { hostToken } = req.body;
+
+            if (!hostToken) {
+                return res.status(400).json({ error: 'Host token is required' });
+            }
+
+            const result = await gameService.startGame(pin, hostToken);
+
+            return res.status(200).json({
+                success: true,
+                data: result,
+            });
+        } catch (error: any) {
+            return res.status(400).json({
                 success: false,
                 error: error.message,
             });
