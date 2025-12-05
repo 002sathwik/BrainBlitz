@@ -3,6 +3,7 @@ import quizRoutes from './routes/quiz.route';
 import gameRoutes from './routes/games.route';
 import seeRoutes from './routes/see.route';
 import rabbitmq from './config/rabbitmq';
+import kafka from "./config/kafka";
 const app = express();
 const PORT = 9000;
 
@@ -33,8 +34,11 @@ app.use((req: Request, res: Response) => {
 });
 
 
-rabbitmq.connect().then(() => {
+Promise.all([
+    rabbitmq.connect(),
+    kafka.connectProducer(),
+]).then(() => {
     app.listen(PORT, () => {
         console.log(`🚀 Server running at http://localhost:${PORT}`);
     });
-})
+});

@@ -12,4 +12,8 @@ router.get('/:pin/status', gameController.getGameStatus.bind(gameController));
 
 router.post('/:pin/start', gameController.startGame.bind(gameController));
 
+router.post('/:pin/answer', gameController.submitAnswer.bind(gameController));
+
+router.get('/:pin/leaderboard', gameController.getLeaderboard.bind(gameController));
+
 export default router;

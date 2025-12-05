@@ -3,10 +3,7 @@ import { GameService } from '../service/game.service';
 
 const gameService = new GameService();
 
-
-
 export class GameController {
-
 
     async createGame(req: Request, res: Response) {
         try {
@@ -30,7 +27,6 @@ export class GameController {
             });
         }
     }
-
 
     async joinGame(req: Request, res: Response) {
         try {
@@ -74,7 +70,6 @@ export class GameController {
         }
     }
 
-
     async startGame(req: Request, res: Response) {
         try {
             const { pin } = req.params;
@@ -92,6 +87,57 @@ export class GameController {
             });
         } catch (error: any) {
             return res.status(400).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
+
+    // ✅ NEW: Submit answer
+    async submitAnswer(req: Request, res: Response) {
+        try {
+            const { pin } = req.params;
+            const { playerToken, questionId, selectedOptionId } = req.body;
+
+            if (!playerToken || !questionId || !selectedOptionId) {
+                return res.status(400).json({
+                    error: 'Player token, question ID, and selected option are required'
+                });
+            }
+
+            const result = await gameService.submitAnswer(
+                pin,
+                playerToken,
+                questionId,
+                selectedOptionId
+            );
+
+            return res.status(200).json({
+                success: true,
+                message: 'Answer submitted successfully',
+                data: result,
+            });
+        } catch (error: any) {
+            return res.status(400).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
+
+    // ✅ NEW: Get leaderboard
+    async getLeaderboard(req: Request, res: Response) {
+        try {
+            const { pin } = req.params;
+
+            const leaderboard = await gameService.getLeaderboard(pin);
+
+            return res.status(200).json({
+                success: true,
+                data: leaderboard,
+            });
+        } catch (error: any) {
+            return res.status(404).json({
                 success: false,
                 error: error.message,
             });

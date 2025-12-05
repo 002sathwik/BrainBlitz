@@ -18,6 +18,14 @@ class ApiService {
         });
         return response.json();
     }
+    async submitAnswer(pin: string, playerToken: string, questionId: string, selectedOptionId: string): Promise<ApiResponse<AnswerResult>> {
+        const response = await fetch(`${API_BASE}/game/${pin}/answer`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ playerToken, questionId, selectedOptionId }),
+        });
+        return response.json();
+    }
 
     async getQuizzes(): Promise<ApiResponse<Quiz[]>> {
         const response = await fetch(`${API_BASE}/quiz`);

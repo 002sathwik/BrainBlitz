@@ -2,13 +2,14 @@
 import React, { useState } from 'react';
 import { Play, Users } from 'lucide-react';
 import api from '../services/api';
+import { PlayerGamePage } from './PlayerGamePage';
 
 export const JoinGamePage: React.FC = () => {
     const [pin, setPin] = useState('');
     const [nickname, setNickname] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [joined, setJoined] = useState(false);
+    const [gameData, setGameData] = useState<any>(null);
 
     const handleJoin = async () => {
         setError('');
@@ -17,8 +18,15 @@ export const JoinGamePage: React.FC = () => {
         try {
             const response = await api.joinGame(pin, nickname);
 
-            if (response.success) {
-                setJoined(true);
+            if (response.success && response.data) {
+                // Store all game data including playerToken
+                setGameData({
+                    pin,
+                    nickname,
+                    playerToken: response.data.playerToken,
+                    playerId: response.data.playerId,
+                    gameId: response.data.gameId,
+                });
             } else {
                 setError(response.error || 'Failed to join game');
             }
@@ -29,24 +37,14 @@ export const JoinGamePage: React.FC = () => {
         }
     };
 
-    if (joined) {
+    // ✅ Transition to game screen after joining
+    if (gameData) {
         return (
-            <div className="max-w-2xl mx-auto text-center">
-                <div className="bg-white rounded-2xl shadow-2xl p-12">
-                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <Users className="w-10 h-10 text-green-600" />
-                    </div>
-                    <h2 className="text-4xl font-bold mb-4">You&rsquo;re In!</h2>
-                    <p className="text-xl text-gray-600 mb-2">
-                        Welcome, <span className="font-bold text-purple-600">{nickname}</span>
-                    </p>
-                    <p className="text-gray-500 mb-8">Waiting for the host to start the game...</p>
-                    <div className="bg-purple-50 p-6 rounded-xl">
-                        <p className="text-sm text-gray-600 mb-2">Game PIN</p>
-                        <p className="text-3xl font-bold text-purple-600">{pin}</p>
-                    </div>
-                </div>
-            </div>
+            <PlayerGamePage
+                pin={gameData.pin}
+                nickname={gameData.nickname}
+                playerToken={gameData.playerToken}
+            />
         );
     }
 

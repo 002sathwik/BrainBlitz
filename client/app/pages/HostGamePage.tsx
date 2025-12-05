@@ -1,4 +1,5 @@
-import React from 'react';
+"use client";
+import React, { useState } from 'react';
 import { Play, Users } from 'lucide-react';
 import { GamePinDisplay } from '../components/GamePinDisplay';
 import { PlayerCard } from '../components/PlayerCard';
@@ -6,6 +7,7 @@ import { useSSE } from '../hooks/useSSE';
 import { useGameSession } from '../hooks/useGameSession';
 import api from '../services/api';
 import { SSEEvent } from '../types/game.types';
+import { HostGamePlayPage } from './HostGamePlayPage';
 
 interface HostGamePageProps {
     gameData: any;
@@ -13,11 +15,18 @@ interface HostGamePageProps {
 
 export const HostGamePage: React.FC<HostGamePageProps> = ({ gameData }) => {
     const { players, refetch } = useGameSession(gameData?.pin);
+    const [gameStarted, setGameStarted] = useState(false);
 
     const handleSSEMessage = (event: SSEEvent) => {
         console.log('SSE Event:', event);
+        
         if (event.type === 'PLAYER_JOINED') {
             refetch();
+        }
+        
+        // ✅ Transition to gameplay when countdown starts
+        if (event.type === 'COUNTDOWN_STARTED') {
+            setGameStarted(true);
         }
     };
 
@@ -29,15 +38,25 @@ export const HostGamePage: React.FC<HostGamePageProps> = ({ gameData }) => {
         try {
             const response = await api.startGame(gameData.pin, gameData.hostToken);
 
-            if (response.success) {
-                alert('Game started!');
-            } else {
+            if (!response.success) {
                 alert(response.error || 'Failed to start game');
             }
+            // SSE will trigger the transition via COUNTDOWN_STARTED event
         } catch (err) {
             alert('Network error');
         }
     };
+
+    // ✅ Transition to gameplay screen
+    if (gameStarted) {
+        return (
+            <HostGamePlayPage
+                pin={gameData.pin}
+                quizTitle={gameData.quizTitle}
+                totalQuestions={gameData.totalQuestions}
+            />
+        );
+    }
 
     if (!gameData) {
         return <div className="text-center py-20">Loading game...</div>;

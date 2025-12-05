@@ -18,7 +18,19 @@ export interface GameSession {
 export type GameStatus = 'LOBBY' | 'COUNTDOWN' | 'QUESTION' | 'RESULTS' | 'LEADERBOARD' | 'ENDED';
 
 export interface SSEEvent {
-  type: 'CONNECTED' | 'PLAYER_JOINED' | 'GAME_STARTED' | 'QUESTION_STARTED' | 'GAME_ENDED';
+
+  type: 
+    | 'CONNECTED' 
+    | 'PLAYER_JOINED' 
+    | 'COUNTDOWN_STARTED'
+    | 'GAME_STARTED' 
+    | 'QUESTION_STARTED' 
+    | 'PLAYER_ANSWERED'
+    | 'QUESTION_ENDED' 
+    | 'LEADERBOARD'
+    | 'GAME_ENDED';
+  
+
   pin?: string;
   player?: Player;
   totalPlayers?: number;
